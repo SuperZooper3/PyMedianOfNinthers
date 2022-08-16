@@ -79,7 +79,7 @@ def ninther(A, i1, i2, i3, i4, i5, i6, i7, i8, i9):
     A[i__] = A[i5]
     A[i5] = temp
 
-    return 
+    return i__
 
 # The next three functions are an almost direct C++ -> Python translation of the functions outlined in the paper https://github.com/andralex/MedianOfNinthers/blob/9fa75b267e74d67b15dbd555311f1ea5f8568e1b/src/common.h#L384
 
@@ -183,25 +183,35 @@ def expandPartitionLeft(r, lo, pivot):
     return pivot
 
 def expandPartition(r, lo, p, hi, length):
-    assert(lo <= p and p < hi and hi <= length)
+    """
+    Partition r[lo..hi] around pivot r[p]
+    """
+    assert(lo <= p and p < hi and hi <= length) # Precondition, they must fall inside bounds
 
-    hi -= 1
-    length -= 1
+    hi -= 1 # The pivot is smaller than high so we can skip the first step
+    length -= 1 # Same for the length
 
-    left = 0
+    left = 0 
 
     while True:
-        while r[length] <= r[p]:
+        print("left: " + str(left) + " pivot: " + str(p) + " lo: " + str(lo) + " hi: " + str(hi) + " length: " + str(length) + " r: " + str(r))
+        while True:
 
             if (left == lo):
                 return p + expandPartitionRight(r + p, hi - p, length - p)
 
+            if (r[length] > r[p]):
+                break
+
             left += 1
         
-        while r[p] <= r[length]:
+        while True:
 
             if (left == hi):
                 return left + expandPartitionLeft(r + left, lo - left, p - left)
+
+            if (r[p] >= r[length]):
+                break
 
             length -= 1
 
@@ -214,10 +224,9 @@ def expandPartition(r, lo, p, hi, length):
 
 def medianOfNinthers(A):
     """
-    O is the φ expressed in the paper. It's 1/64 for arrays up to 2^17 elements long, and 1/1024 after that, but should be analysed futher 
     Returns p and Partitions A at A[p]
     """
-    O = 1//64
+    O = 1//64 # O is the φ expressed in the paper. It's 1/64 for arrays up to 2^17 elements long, and 1/1024 after that, but should be analysed futher for performance
     if len(A) > 2 ** 17:
         O = 1//1024
 
@@ -241,6 +250,6 @@ def medianOfNinthers(A):
         r += 3
 
     quickselect(medianOfNinthers, Am, n_ // 2)
-    return expandPartition(A, 2 * g + n_, 2 * g + 1.5 * n_, 2 * (g + n))
+    return expandPartition(A, m, 2 * g + 1.5 * n_, m + n)
 
     
