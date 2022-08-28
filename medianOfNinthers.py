@@ -40,9 +40,18 @@ def hoarePartition(A,p):
     a = 1
     b = len(A) - 1
 
-    while True:
-        while a <= b and A[a] < A[0]:
+    while True: # TODO: SKIP HAVING TO DO A DOUBLE BREAK
+        breakFlag = False # roundabout way of double breaking, like described in the paper
+
+        while True:
+            if a > b:
+                breakFlag = True
+                break
+            if A[a] >= A[0]:
+                break
             a += 1
+
+        if breakFlag: break
 
         while A[0] < A[b]:
             b -= 1
@@ -82,7 +91,7 @@ def ninther(A, i1, i2, i3, i4, i5, i6, i7, i8, i9):
     return i__
 
 # The next three functions are an almost direct C++ -> Python translation of the functions outlined in the paper https://github.com/andralex/MedianOfNinthers/blob/9fa75b267e74d67b15dbd555311f1ea5f8568e1b/src/common.h#L384
-
+## TODO: DEBUG, NOT WORKING CORRECTLY, PROBABLY A MISSINTERPRETATION OF THE PAPER
 def expandPartitionRight(r, hi, right):
     pivot = 0
     assert(hi > 0)
@@ -97,6 +106,7 @@ def expandPartitionRight(r, hi, right):
             return pivot
         
         if (r[right] >= r[0]):
+            right -= 1 # right here to repliacte the --rite in the C# code
             continue
 
         pivot += 1
@@ -107,8 +117,10 @@ def expandPartitionRight(r, hi, right):
 
         right -= 1
 
+
     while (right > pivot):
         if (r[right] >= r[0]):
+            right -= 1
             continue
 
         while (right > pivot):
@@ -122,6 +134,7 @@ def expandPartitionRight(r, hi, right):
 
         right -= 1
 
+    # done
     temp = r[0]
     r[0] = r[pivot]
     r[pivot] = temp
@@ -142,6 +155,7 @@ def expandPartitionLeft(r, lo, pivot):
             return pivot
 
         if (r[oldPivot] >= r[left]):
+            left += 1
             continue
 
         pivot -= 1
@@ -152,9 +166,13 @@ def expandPartitionLeft(r, lo, pivot):
 
         left += 1
 
-    while left != pivot:
+    while True:
+
+        if (left == pivot): # This should be able to be removed, but trying to stay as close to C++ version as possible
+            break
 
         if (r[oldPivot] >= r[left]):
+            left += 1
             continue
 
         while True:
@@ -176,17 +194,19 @@ def expandPartitionLeft(r, lo, pivot):
             
         left += 1
 
+    # done
+
     temp = r[oldPivot]
     r[oldPivot] = r[pivot]
     r[pivot] = temp
 
     return pivot
 
-def expandPartition(r, lo, p, hi, length):
+def expandPartition(partitionList, lo, pivot, hi, length):
     """
     Partition r[lo..hi] around pivot r[p]
     """
-    assert(lo <= p and p < hi and hi <= length) # Precondition, they must fall inside bounds
+    assert(lo <= pivot and pivot < hi and hi <= length) # Precondition, they must fall inside bounds
 
     hi -= 1 # The pivot is smaller than high so we can skip the first step
     length -= 1 # Same for the length
@@ -194,30 +214,28 @@ def expandPartition(r, lo, p, hi, length):
     left = 0 
 
     while True:
-        print("left: " + str(left) + " pivot: " + str(p) + " lo: " + str(lo) + " hi: " + str(hi) + " length: " + str(length) + " r: " + str(r))
         while True:
-
             if (left == lo):
-                return p + expandPartitionRight(r + p, hi - p, length - p)
+                return pivot + expandPartitionRight(partitionList[pivot:], hi - pivot, length - pivot) # stumped on what this line is supposed to be
+                # r + pivot is being translated to python with [pivot:]
 
-            if (r[length] > r[p]):
+            if (partitionList[length] > partitionList[pivot]):
                 break
 
             left += 1
         
         while True:
-
             if (left == hi):
-                return left + expandPartitionLeft(r + left, lo - left, p - left)
+                return left + expandPartitionLeft(partitionList[left:], lo - left, pivot - left)
 
-            if (r[p] >= r[length]):
+            if (partitionList[pivot] >= partitionList[length]):
                 break
 
             length -= 1
 
-        temp = r[left]
-        r[left] = r[length]
-        r[length] = temp
+        temp = partitionList[left]
+        partitionList[left] = partitionList[length]
+        partitionList[length] = temp
 
         left += 1
         length -= 1
@@ -231,11 +249,12 @@ def medianOfNinthers(A):
         O = 1//1024
 
     n = len(A)
-    n_ = math.floor((O * n)//3)
+    n_ = (O * n)//3
 
     if n_ < 3:
         return hoarePartition(A, len(A)//2)
 
+    # These variables are all defined in the paper, but make almost no sense. Completly different from what apears in the GH source code
     g = (n - 3 * n_) // 4
     m = 2 * g + n_
     Am = A[m: m + n_]
@@ -243,13 +262,13 @@ def medianOfNinthers(A):
     l = g
     r = 3 * g + 2 * n_
 
-    for i in range(n_//3 - 1): # not 100% sure on this line, if errors arrise investigate futher
-        ninther(A, l, m, r, l + 1, m + n_//3, r + 1, l + 2, m + 2 * n_//3, r + 2, m, m + n_//3, m + 2 * n_//3)
+    for i in range(n_//3 - 1): # TODO: not 100% sure on this line, if errors arrise investigate futher
+        ninther(A, l, m, r, l + 1, m + n_//3, r + 1, l + 2, m + (2 * n_)//3, r + 2, m, m + (n_//3), m + (2 * n_)//3)
         m += 1
         l += 3
         r += 3
 
     quickselect(medianOfNinthers, Am, n_ // 2)
-    return expandPartition(A, m, 2 * g + 1.5 * n_, m + n)
+    return expandPartition(A, m, 2 * g + n_ + n_//2, m + n)
 
     
