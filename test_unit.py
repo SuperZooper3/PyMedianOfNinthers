@@ -43,7 +43,7 @@ def test_median_mix():
 # Partion check
 def check_partition(A, p):
     """
-    Checks if the partition is correct
+    Checks if a given partion A partition is correctly partitioned arround p
     """
     for i in range(len(A)):
         if i < p and not (A[i] <= A[p]):
